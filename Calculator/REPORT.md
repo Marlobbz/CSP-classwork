@@ -100,13 +100,13 @@ if(isnan(result)){
 
 ### 算法流程：
 
-![工作流程图](.Calculator/process.png)
+![工作流程图](.process.png)
 
 ## 2.3界面设计
 
 采用常规计算器布局，中间为文本框，左侧为数字区，右侧为操作区
 
-![演示界面](.Calculator/host.png)
+![演示界面](.host.png)
 
 QT中使用信号与槽机制实现按钮事件处理。
 
@@ -142,7 +142,7 @@ connect(ui->btnAdd, &QPushButton::clicked,this, &MainWindow::operatorClicked);
 
 **程序主要构成：**
 
-![程序结构](.Calculator/framework.png)
+![程序结构](.framework.png)
 
 ## 3.2运行调试：
 
