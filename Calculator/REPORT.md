@@ -100,7 +100,7 @@ if(isnan(result)){
 
 ### 算法流程：
 
-<img src="C:\Users\zhouqinbo\Desktop\CSP\Calculator\IMG_20260920_145241_edit_2021683254764947.png" alt="IMG_20260920_145241_edit_2021683254764947" style="zoom: 50%;" />
+![工作流程图](.Calculator/IMG_20260920_153949.png)
 
 ## 2.3界面设计
 
