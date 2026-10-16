@@ -55,11 +55,7 @@ void MainWindow::createPuzzleButtons()//创建按钮函数
     //先清除网格布局中的旧按钮，避免切换难度后按钮叠加
     while(QLayoutItem*item=ui->gridLayout_2->takeAt(0))
     {
-        if(QWidget *widget=item->widget())
-        {
-            delete widget;
-        }
-
+        if(QWidget *widget=item->widget()) delete widget;
         delete item;
     }
     buttons.clear();//清空按钮指针集合
@@ -181,9 +177,7 @@ void MainWindow::showOriginalImage()//查看原图函数
 {
     QDialog dialog(this);
     dialog.setWindowTitle("原图");
-
     QLabel label(&dialog);
-
     QPixmap showImage = originalImage.scaled(//根据窗口大小自动缩放图片
         600,
         600,
@@ -193,10 +187,8 @@ void MainWindow::showOriginalImage()//查看原图函数
 
     label.setPixmap(showImage);
     label.setAlignment(Qt::AlignCenter);
-
     QVBoxLayout layout(&dialog);
     layout.addWidget(&label);
-
     dialog.exec();
 }
 ////////////////////////////////////////////////////////随机换图
@@ -230,7 +222,6 @@ void MainWindow::chooseImage()//选择图片
 {
     QString fileName=QFileDialog::getOpenFileName(this,"选择图片","","图片文件 (*.png *.jpg *.jpeg *.bmp)");
     if(fileName.isEmpty()) return;
-
     currentImagePath = fileName;
     loadPuzzleImage();
     shufflePuzzle();
@@ -364,11 +355,9 @@ void MainWindow::updateStepsLabel()
 void MainWindow::resetGameStats()
 {
     gameTimer->stop();
-
     elapsedSeconds=0;
     steps=0;
     gameStarted=false;
-
     ui->timeLabel->setText("时间：00:00");
     updateStepsLabel();
 }
@@ -384,11 +373,9 @@ void MainWindow::stopGameTimer()
 void MainWindow::loadBestScores()
 {
     QSettings settings("Marlobbz", "PuzzleGame");
-
     // 如果没有保存过成绩，就使用 -1 表示暂无记录
     bestTime = settings.value("bestTime", -1).toInt();
     bestSteps = settings.value("bestSteps", -1).toInt();
-
     // 更新界面显示
     refreshBestScores();
 }
@@ -404,14 +391,12 @@ void MainWindow::refreshBestScores()
     {
         int minutes = bestTime / 60;
         int seconds = bestTime % 60;
-
         ui->bestTimeLabel->setText(
             QString("最佳用时：%1:%2")
                 .arg(minutes, 2, 10, QChar('0'))
                 .arg(seconds, 2, 10, QChar('0'))
             );
     }
-
     // 显示最少步数
     if (bestSteps == -1)
     {
@@ -429,7 +414,6 @@ void MainWindow::refreshBestScores()
 void MainWindow::updateBestScores()
 {
     QSettings settings("Marlobbz", "PuzzleGame");
-
     bool changed=false;
     // 首次完成游戏，或本局用时更短
     if (bestTime==-1||elapsedSeconds<bestTime)
