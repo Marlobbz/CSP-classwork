@@ -25,24 +25,28 @@ MainWindow::MainWindow(QWidget *parent):QMainWindow(parent),ui(new Ui::MainWindo
     connect(ui->restartButton, &QPushButton::clicked,this, &MainWindow::restartGame);
     connect(ui->difficultyButton, &QPushButton::clicked,this, &MainWindow::choosePuzzleSize);
     //设置拼图区域
-    ui->layoutWidget->setGeometry(180, 20, 600, 600);
+    ui->layoutWidget->setGeometry(180,20,600,600);
     ui->gridLayout_2->setSpacing(0);
-    ui->gridLayout_2->setContentsMargins(0, 0, 0, 0);
+    ui->gridLayout_2->setContentsMargins(0,0,0,0);
     //动态创建拼图按钮
     createPuzzleButtons();
     //初始化图片和拼图
-    currentImagePath = ":/image/test.png";
-    loadPuzzleImage();
-    shufflePuzzle();
-    refreshPuzzle();
+    currentImagePath=":/image/test.png";
+    if (loadPuzzleImage())
+    {
+        shufflePuzzle();
+        refreshPuzzle();
+        //等布局完成后，再刷新一次
+        QTimer::singleShot(0,this,[this](){refreshPuzzle();});
+    }
     //再刷新一次，确定按钮尺寸
-    QTimer::singleShot(0, this, [this]() {refreshPuzzle();});
+    QTimer::singleShot(0,this,[this](){refreshPuzzle();});
 
-    // 初始化计时器
+    //初始化计时器
     gameTimer = new QTimer(this);
     connect(gameTimer, &QTimer::timeout,this, &MainWindow::updateGameTime);
     resetGameStats();
-    loadBestScores();// 读取历史最佳成绩
+    loadBestScores();//读取历史最佳成绩
 }
 
 MainWindow::~MainWindow()
@@ -55,7 +59,11 @@ void MainWindow::createPuzzleButtons()//创建按钮函数
     //先清除网格布局中的旧按钮，避免切换难度后按钮叠加
     while(QLayoutItem*item=ui->gridLayout_2->takeAt(0))
     {
-        if(QWidget *widget=item->widget()) delete widget;
+        if(QWidget *widget=item->widget())
+        {
+            delete widget;
+        }
+
         delete item;
     }
     buttons.clear();//清空按钮指针集合
@@ -125,59 +133,62 @@ void MainWindow::choosePuzzleSize()//自定义难度
 }
 
 //功能部分：
-void MainWindow::loadPuzzleImage()//加载、裁剪、切分并初始化数据
+
+bool MainWindow::loadPuzzleImage() // 加载、裁剪、切分并初始化拼图数据
 {
     //根据当前路径加载图片
     QPixmap image(currentImagePath);
-    if(image.isNull())
+    if(image.isNull())//加载失败时，直接返回 false
     {
-        QMessageBox::warning(this, "Error", "No picture！");
-        return;
+        QMessageBox::warning(this,"Error","No picture！");
+        return false;
     }
-    //保存原图，用于查看原图功能
-    originalImage=image;
-    //根据行列数计算拼图整体的目标宽高比例
+    originalImage=image;//保存原图，用于查看原图功能
+    //根据当前行列数计算拼图整体的目标宽高比例
     double targetRatio=static_cast<double>(puzzleCols)/puzzleRows;
     int cropWidth=image.width();
     int cropHeight=image.height();
-    //居中裁剪，让图片比例与拼图整体比例一致
-    if (static_cast<double>(image.width())/image.height()>targetRatio)
+    //居中裁剪，使图片比例与拼图整体比例一致
+    if(static_cast<double>(image.width())/image.height()>targetRatio)
     {
-        cropWidth = static_cast<int>(image.height()*targetRatio);
+        cropWidth=static_cast<int>(image.height()*targetRatio);
     }
     else
     {
-        cropHeight = static_cast<int>(image.width()/targetRatio);
+        cropHeight=static_cast<int>(image.width()/targetRatio);
     }
     int x=(image.width()-cropWidth)/2;
     int y=(image.height()-cropHeight)/2;
     image=image.copy(x,y,cropWidth,cropHeight);
-    // 清除上一次加载的拼图数据
+    //清除上一次的拼图数据
     puzzleImages.clear();
     puzzleState.clear();
     int total=puzzleRows*puzzleCols;
-    // 按照当前行数和列数切分图片
-    for (int i=0;i<total;i++)
+    //按照当前行数和列数切分图片
+    for(int i=0;i<total;i++)
     {
         int row=i/puzzleCols;//行
         int col=i%puzzleCols;//列
-        // 计算当前拼图块的边界
+        //计算当前拼图块的边界
         int x1=col*image.width()/puzzleCols;
         int x2=(col+1)*image.width()/puzzleCols;
         int y1=row*image.height()/puzzleRows;
         int y2=(row+1)*image.height()/puzzleRows;
-        QPixmap piece = image.copy(x1,y1,x2-x1,y2-y1);
+        QPixmap piece=image.copy(x1,y1,x2-x1,y2-y1);
         //保存拼图块，并记录其初始编号
         puzzleImages.append(piece);
         puzzleState.append(i);
     }
+    return true;//图片加载和切分成功
 }
 ////////////////////////////////////////////////////////查看原图
 void MainWindow::showOriginalImage()//查看原图函数
 {
     QDialog dialog(this);
     dialog.setWindowTitle("原图");
+
     QLabel label(&dialog);
+
     QPixmap showImage = originalImage.scaled(//根据窗口大小自动缩放图片
         600,
         600,
@@ -187,47 +198,11 @@ void MainWindow::showOriginalImage()//查看原图函数
 
     label.setPixmap(showImage);
     label.setAlignment(Qt::AlignCenter);
+
     QVBoxLayout layout(&dialog);
     layout.addWidget(&label);
-    dialog.exec();
-}
-////////////////////////////////////////////////////////随机换图
-void MainWindow::changeRandomImage()//随机换图
-{
-    QString imagePaths[3]=
-        {
-            ":/image/test.png",
-            ":/image/test2.png",
-            ":/image/test3.png"
-        };
-    random_device rd;
-    mt19937 g(rd());
-    uniform_int_distribution<int> dist(0, 2);
-    QString newPath;
-    do
-    {
-        newPath=imagePaths[dist(g)];
-    }
-    while (newPath==currentImagePath);
 
-    currentImagePath=newPath;
-    loadPuzzleImage();
-    shufflePuzzle();
-    firstSelected=-1;
-    resetGameStats(); //新一局时间和步数清零
-    refreshPuzzle();
-}
-////////////////////////////////////////////////////////自定义图片
-void MainWindow::chooseImage()//选择图片
-{
-    QString fileName=QFileDialog::getOpenFileName(this,"选择图片","","图片文件 (*.png *.jpg *.jpeg *.bmp)");
-    if(fileName.isEmpty()) return;
-    currentImagePath = fileName;
-    loadPuzzleImage();
-    shufflePuzzle();
-    firstSelected=-1;
-    resetGameStats();//新一局时间和步数清零
-    refreshPuzzle();
+    dialog.exec();
 }
 
 void MainWindow::shufflePuzzle()//打乱拼图块的排列顺序
@@ -264,6 +239,70 @@ void MainWindow::refreshPuzzle()
         buttons[i]->setIconSize(target);
     }
 }
+////////////////////////////////////////////////////////随机换图
+void MainWindow::changeRandomImage()
+{
+    QString imagePaths[3]=
+        {
+            ":/image/test.png",
+            ":/image/test2.png",
+            ":/image/test3.png"
+        };
+    random_device rd;
+    mt19937 g(rd());
+    uniform_int_distribution<int> dist(0,2);
+    QString newPath;
+    //避免连续选择当前图片
+    do
+    {
+        newPath=imagePaths[dist(g)];
+    }
+    while (newPath==currentImagePath);
+    //保存原来的图片路径
+    QString oldPath=currentImagePath;
+    currentImagePath=newPath;
+    //加载失败则恢复原路径不继续操作
+    if (!loadPuzzleImage())
+    {
+        currentImagePath=oldPath;
+        return;
+    }
+    //加载成功后开始新一局
+    shufflePuzzle();
+    firstSelected = -1;
+    resetGameStats();
+    refreshPuzzle();
+}
+////////////////////////////////////////////////////////自定义图片
+void MainWindow::chooseImage()
+{
+    QString fileName = QFileDialog::getOpenFileName(
+        this,
+        "选择图片",
+        "",
+        "图片文件 (*.png *.jpg *.jpeg *.bmp)"
+        );
+    //取消选择时不做任何操作
+    if(fileName.isEmpty()) return;
+    //暂存原来的图片路径
+    QString oldPath=currentImagePath;
+    //尝试加载新图片
+    currentImagePath=fileName;
+    if(!loadPuzzleImage())
+    {
+        //加载失败恢复原路径并保留原游戏状态
+        currentImagePath=oldPath;
+        return;
+    }
+    //只有加载成功，才开始新一局
+    shufflePuzzle();
+    firstSelected = -1;
+    resetGameStats();
+    refreshPuzzle();
+}
+
+
+
 ////////////////////////////////////////////////////////重新游戏
 void MainWindow::restartGame()
 {
@@ -277,6 +316,7 @@ void MainWindow::restartGame()
 ////////////////////////////////////////////////////////点击函数
 void MainWindow::puzzleButtonClicked()
 {
+    if (gameFinished) return;//如果游戏已经完成，不再允许交换拼图
     QPushButton *button = qobject_cast<QPushButton*>(sender());//获取触发点击事件的按钮
     if (button == nullptr) return;
     // 查找这个按钮在动态按钮容器中的编号
@@ -298,10 +338,11 @@ void MainWindow::puzzleButtonClicked()
     swap(puzzleState[firstSelected], puzzleState[index]);//交换两个位置对应的图片编号
     steps++;//交换成功，步数加一
     updateStepsLabel();
-    firstSelected = -1;//清除选中状态
+    firstSelected=-1;//清除选中状态
     refreshPuzzle();//刷新界面
     if(isPuzzleSolved())//判断是否完成
     {
+        gameFinished=true;
         stopGameTimer();
         updateBestScores();
         QMessageBox::information(
@@ -355,9 +396,12 @@ void MainWindow::updateStepsLabel()
 void MainWindow::resetGameStats()
 {
     gameTimer->stop();
+
     elapsedSeconds=0;
     steps=0;
     gameStarted=false;
+    gameFinished=false;
+
     ui->timeLabel->setText("时间：00:00");
     updateStepsLabel();
 }
@@ -373,9 +417,11 @@ void MainWindow::stopGameTimer()
 void MainWindow::loadBestScores()
 {
     QSettings settings("Marlobbz", "PuzzleGame");
+
     // 如果没有保存过成绩，就使用 -1 表示暂无记录
     bestTime = settings.value("bestTime", -1).toInt();
     bestSteps = settings.value("bestSteps", -1).toInt();
+
     // 更新界面显示
     refreshBestScores();
 }
@@ -391,12 +437,14 @@ void MainWindow::refreshBestScores()
     {
         int minutes = bestTime / 60;
         int seconds = bestTime % 60;
+
         ui->bestTimeLabel->setText(
             QString("最佳用时：%1:%2")
                 .arg(minutes, 2, 10, QChar('0'))
                 .arg(seconds, 2, 10, QChar('0'))
             );
     }
+
     // 显示最少步数
     if (bestSteps == -1)
     {
@@ -414,6 +462,7 @@ void MainWindow::refreshBestScores()
 void MainWindow::updateBestScores()
 {
     QSettings settings("Marlobbz", "PuzzleGame");
+
     bool changed=false;
     // 首次完成游戏，或本局用时更短
     if (bestTime==-1||elapsedSeconds<bestTime)
