@@ -23,7 +23,7 @@ public:
 
 private:
     Ui::MainWindow *ui;
-    void loadPuzzleImage();
+    bool loadPuzzleImage();
 
     QVector<QPushButton*> buttons;//动态保存拼图按钮
     QVector<QPixmap> puzzleImages;//动态保存每块拼图的图片
@@ -33,17 +33,13 @@ private:
     void createPuzzleButtons();//根据当前行数和列数创建拼图按钮
     void choosePuzzleSize();//自定义拼图行数和列数
 
-    int selected = -1;//记录点击的拼图块
-
-    void swapPuzzle(int a, int b);
-    bool canSwap(int a, int b);
-
     void shufflePuzzle();
     void refreshPuzzle();
     void puzzleButtonClicked();
     int firstSelected = -1;//第一次点击的位置
     //基础功能
     bool isPuzzleSolved();//检测拼图是否完成
+
     QPixmap originalImage;//保存完整的原图
     QString currentImagePath;//记录当前图片编号
     void showOriginalImage();//显示原图
@@ -62,6 +58,7 @@ private:
     int elapsedSeconds=0;//已用时间，单位秒
     int steps=0;//成功交换的次数
     bool gameStarted=false;//是否已经开始计时
+    bool gameFinished=false;//标记游戏是否已经完成
 
     //最佳成绩记录
     void loadBestScores();//读取历史最佳成绩
