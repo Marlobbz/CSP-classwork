@@ -449,15 +449,15 @@ connect(
 
 **图 3：程序运行界面**
 
-<img src="C:\Users\zhouqinbo\Desktop\CSP\PuzzleGame\picture\test1.png" alt="test1" style="zoom:50%;" />
+![用户界面](picture/test1.png)
 
 **图 4：查看原图界面**
 
-<img src="C:\Users\zhouqinbo\Desktop\CSP\PuzzleGame\picture\test2.png" alt="test2" style="zoom:50%;" />
+![用户界面](picture/test2.png)
 
 **图 5：自定义难度界面**
 
-<img src="C:\Users\zhouqinbo\Desktop\CSP\PuzzleGame\picture\test3.png" alt="test3" style="zoom:50%;" />
+![用户界面](picture/test3.png)
 
 # 3 系统实现与运行调试
 
