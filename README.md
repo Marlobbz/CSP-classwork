@@ -27,6 +27,27 @@
 
 ---
 
+### 2. PuzzleGame —— 基于 Qt 的拼图游戏
+
+使用 **C++ / Qt 6** 实现的图形化拼图游戏。玩家可以通过点击两块拼图交换位置，将打乱的图片恢复为正确排列，并支持自定义拼图难度。
+
+**项目内容：**
+
+* Qt 图形化游戏界面
+* 拼图图片加载、裁剪与分割
+* 点击交换拼图块及完成状态判断
+* 随机切换内置图片、选择本地图片
+* 查看原图与重新开始游戏
+* 自定义拼图行数和列数（2～10）
+* 游戏计时、步数统计及最佳成绩记录
+ps:学会用visio画图啦！
+**相关文件：**
+
+* [PuzzleGame 项目源码](./PuzzleGame/)
+* [PuzzleGame 实验报告](./PuzzleGame/REPORT.md)
+
+---
+
 ## 仓库结构
 
 ```text
@@ -38,6 +59,15 @@ CSP-classwork/
 │   ├── mainwindow.ui
 │   └── ...
 │
+├── PuzzleGame/
+│   ├── REPORT.md
+│   ├── main.cpp
+│   ├── mainwindow.cpp
+│   ├── mainwindow.h
+│   ├── mainwindow.ui
+│   ├── resources.qrc
+│   └── ...
+│
 └── README.md
 ```
 
@@ -46,6 +76,7 @@ CSP-classwork/
 * C++
 * Qt
 * Qt Creator
+* CMake
 * STL
 
 ## 说明
